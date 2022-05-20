@@ -1,4 +1,4 @@
-#library(ggplot2)
+library(ggplot2)
 #questao 2
 ############
 
@@ -18,7 +18,7 @@ a=3
 b=6
 p= 0.5
 #Gerando a amostra
-set.seed(0)
+set.seed(1)
 x = rnorm(n = 500 ,mean = mux,sd = sqrt(sigma2x))
 
 ##gerandp erros
@@ -40,10 +40,10 @@ for(i in 1:n){
   }
 }
 
-#set.seed(0)
+#set.seed(2)
 e2 = rgamma(n = 500, shape = a, rate = b )
 
-set.seed(1)
+set.seed(5)
 e3 = rcauchy(n = 500, location = 0, scale = 1)
 
 # gerando amostras dos ys, dado x
@@ -52,32 +52,45 @@ modelo1 = cbind(y1, x, e1)
 colnames(modelo1) = c('explicada', 'explicativa', 'erro')
 
 y2 = b0 + b1*x + e2
-modelo2 = data.frame(y2, x, e2)
+modelo2 = cbind(y2, x, e2)
 colnames(modelo2) = c('explicada', 'explicativa', 'erro')
 
 y3 = b0 + b1*x + e3
-modelo3 = data.frame(y3, x)
+modelo3 = cbind(y3, x)
 colnames(modelo3) = c('explicada', 'explicativa')
 
 #analise grafica
-ggplot(modelo1[,1], aes(x=explicativa)) + 
-  geom_histogram(aes(y=..density..), colour="black", fill="white")+
-  geom_density(alpha=.2, fill="#FF6666") +
-
-    hist(modelo1[,1] , col="red", # column color
-        border="black",
+ #modelo 1
+ hist(modelo1[,1] , col=mycol1, # column color
+       border="black",
        prob = TRUE,  # show densities instead of frequencies
-        xlab = "b1",
-        main = "b1 modelo 2",xlim=c(-10,40) )
-  
-lines(density(modelo1[,1]))
+       xlab= " Amostra 1",
+       main = " Modelo 1",xlim=c(-10,40), ylim = c(0, 0.25))
+
+lines(density(modelo1[,1]), col='red')
 hist(modelo1[,3],prob = TRUE,
-     col="white", add=T)
-lines(density(modelo1[,3]))
+     col=mycol2, add=T)
+lines(density(modelo1[,3]), col='red')
+legend(x= "topright", legend=c("Y1 amostral", "Erro amostral 1 ", "fitted line"), 
+       fill = c(mycol1,mycol2, "red") )
+#modelo 2
+hist(modelo2[,1] , col=mycol1, # column color
+           border="black",
+           prob = TRUE,  # show densities instead of frequencies
+           xlab= " Amostra 2",
+           main = " Modelo 2",xlim=c(-5,25), ylim = c(0, 1.8))
+ 
+lines(density(modelo2[,1]), col='red')
+ hist(modelo2[,3],prob = TRUE,
+             col=mycol2, add=T)
+ lines(density(modelo2[,3]), col='red')
+ legend(x= "topright", legend=c("Y2 amostral", "Erro amostral 2 ", "fitted line"), 
+                fill = c(mycol1,mycol2, "red") )
+ 
 
 ### resultados tabela
-  
-  media= c(mean(x),mean(e1), mean(y1), mean(e2),mean(y2), mean(e3), mean(y3) )
+
+media= c(mean(x),mean(e1), mean(y1), mean(e2),mean(y2), mean(e3), mean(y3) )
 mediana= c(median(x),median(e1), median(y1), median(e2),median(y2), median(e3), median(y3) )
 variancia = c(var(x), var(e1), var(y1), var(e2),var(y2), var(e3), var(y3) )
 minimo = c(min(x),min(e1), min(y1), min(e2),min(y2), min(e3), min(y3) )
@@ -91,12 +104,13 @@ rownames(estats) = c('x' ,'e1 ', 'y1 ', 'e2 ', 'y2 ', 'e3 ', 'y3 ' )
 #########
 reg1 = lm( y1 ~ x)
 summary(reg1)
-
+coefficients(reg1)
 reg2 = lm( y2 ~ x)
 summary(reg2)
-
+coefficients(reg2)
 reg3 = lm( y3 ~ x)
 summary(reg3)
+coefficients(reg3)
 # fazer as tabelas agora
 # no c fazer o teste t e argumentar q funciona pelo tcl com as hipoteses ditas em sala com 1 e 2, mas nao com 3
 
@@ -125,15 +139,16 @@ BTS<- function(x){
   
   
 }
-
-#set.seed(0)
+set.seed(0)
+BTSX= BTS(x)
+set.seed(0)
 BTSY1 <-BTS(y1)
-#set.seed(0)
+set.seed(0)
 BTSY2= BTS(y2)
 set.seed(0)
 BTSY3= BTS(y3)
-set.seed(0)
-BTSX= BTS(x)
+BTSY1
+
 BTS_coef<-function(a,b){
   BTSM=matrix(0,2000,2)
   for(i in 1:2000){
@@ -147,13 +162,13 @@ BTS_coef<-function(a,b){
 
 BTSM1<-data.frame(BTS_coef(BTSY1, BTSX))
 
-hist(BTSM2$b1, col="red", # column color
+hist(BTSM3$b1, col="red", # column color
      border="black",
      prob = TRUE, # show densities instead of frequencies
      xlab = "b1",
      main = "b1 modelo 1")
 
-lines(density(BTSM1$b0))
+lines(density(BTSM3$b1))
 
 BTSM2<-data.frame(BTS_coef(BTSY2, BTSX))
 BTSM3<-data.frame(BTS_coef(BTSY3, BTSX))
@@ -172,17 +187,17 @@ log_like_normal <- function(theta){
   sigma2 <- theta[6] 
   
   loglike  = sum(log((1/(2*(sqrt(2*pi*sigma1)))*exp((-1/2*sigma1)*(y1 - b0 -b1*x - mu1)^2) 
-                     + (1/(2*(sqrt(2*pi*sigma2)))*exp((-1/2*sigma2)*(y1 - b0 -b1*x - mu2)^2))))) 
+                      + (1/(2*(sqrt(2*pi*sigma2)))*exp((-1/2*sigma2)*(y1 - b0 -b1*x - mu2)^2))))) 
   
   return(-loglike)
 }
 
 MLE_estimates <- optim(fn=log_like_normal,            
                        par=c(1.5, 3, -2, 1, 2, 25))
-                      # lower = c(-Inf, -Inf,-Inf,0.0001,-Inf ,0.0001),         
-                      # upper = c(Inf, Inf,Inf,Inf,Inf,Inf),          
-                       #hessian=TRUE,                  # retornar varioancia
-                       #method = "L-BFGS-B")
+# lower = c(-Inf, -Inf,-Inf,0.0001,-Inf ,0.0001),         
+# upper = c(Inf, Inf,Inf,Inf,Inf,Inf),          
+#hessian=TRUE,                  # retornar varioancia
+#method = "L-BFGS-B")
 
 
 MLE_par_n <- MLE_estimates$par
@@ -261,19 +276,28 @@ for (i in 1:2000) {
   }
   MLE_estimates <- optim(fn=log_like_n_BTS,            
                          par=c(0, 3, 0, 1, 1, 25))                  #partida  
-                         #lower = c(-Inf, -Inf,-Inf,0, 0 ,0),         
-                        # upper = c(Inf, Inf,Inf, Inf,Inf, Inf),          
-                         #hessian=TRUE,                  # retornar varioancia
-                         #method = "L-BFGS-B")
+  #lower = c(-Inf, -Inf,-Inf,0, 0 ,0),         
+  # upper = c(Inf, Inf,Inf, Inf,Inf, Inf),          
+  #hessian=TRUE,                  # retornar varioancia
+  #method = "L-BFGS-B")
   MLEBTS_par_n[i,] <- MLE_estimates$par
   
   
 }
+
+MLEBTS_par_n<-data.frame(MLEBTS_par_n)
+colnames(MLEBTS_par_n)<-c('b0','b1','mu1','sigma1', 'mu2','sigma2')
+
+ggplot(MLEBTS_par_n, aes(x=b1)) + 
+  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_density(alpha=.2, fill="#FF6666") 
+  
+
 hist( MLEBTS_par_n[,2], col="red", # column color
-       border="black",
-       prob = TRUE, # show densities instead of frequencies
-       xlab = "b1",
-       main = "b1 modelo 2")
+      border="black",
+      prob = TRUE, # show densities instead of frequencies
+      xlab = "b1",
+      main = "b1 modelo 1")
 
 ########## modelo 2
 
@@ -328,20 +352,21 @@ for (i in 1:2000) {
   
   
   MLE_estimates <- optim(fn=log_like_t,            
-                         par=c(1,1,1))                  #partida  
-                         #lower = c(-Inf, -Inf,1),         
-                         #upper = c(Inf, Inf,Inf),          
-                         #hessian=TRUE,                  # retornar varioancia
-                         #method = "L-BFGS-B")
+                         par=c(1,3,1))                  #partida  
+  #lower = c(-Inf, -Inf,1),         
+  #upper = c(Inf, Inf,Inf),          
+  #hessian=TRUE,                  # retornar varioancia
+  #method = "L-BFGS-B")
   
   
   MLEBTS_par_t[i,] <- MLE_estimates$par
   
   
 }
+
+
 hist( MLEBTS_par_t[,2], col="red", # column color
       border="black",
       prob = TRUE, # show densities instead of frequencies
       xlab = "b1",
-      main = "b1 modelo 2")
-
+      main = "b1 modelo 3")
