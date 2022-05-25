@@ -364,12 +364,14 @@ colnames(MLEBTS_par_n)<-c('b0','b1','mu1','sigma1', 'mu2','sigma2')
 
 ggplot(MLEBTS_par_n, aes(x=b1)) + 
   geom_histogram(aes(y=..density..), colour="black", fill="white")+
-  geom_density(alpha=.2, fill="#FF6666") 
-  
+  geom_density(alpha=.2, fill="#FF6666") +
+  ggtitle('modelo 1 BTS b1') +
+  theme(plot.title = element_text(hjust = 0.5))
 ggplot(MLEBTS_par_n, aes(x=b0)) + 
   geom_histogram(aes(y=..density..), colour="black", fill="white")+
-  geom_density(alpha=.2, fill="#FF6666") 
-
+  geom_density(alpha=.2, fill="#FF6666") +
+ggtitle('modelo 1 BTS b0') +
+  theme(plot.title = element_text(hjust = 0.5))
 
 ########## modelo 2
 
@@ -392,7 +394,7 @@ for (i in 1:2000) {
   MLE_estimates <- optim(fn=log_like_gamma,            
                          par=c(0,3,3,6),                  #partida  
                          lower = c(-Inf, -Inf,0.000001,0.0000001),         
-                         upper = c(Inf, Inf,Inf, Inf),          
+                        upper = c(Inf, Inf,Inf, Inf),          
                          hessian=TRUE,                  # retornar varioancia
                          method = "L-BFGS-B")
   
@@ -403,12 +405,15 @@ MLEBTS_par_g<-data.frame(MLEBTS_par_g)
 colnames(MLEBTS_par_g)<-c('b0','b1','a','b')
 ggplot(MLEBTS_par_g, aes(x=b1)) + 
   geom_histogram(aes(y=..density..), colour="black", fill="white")+
-  geom_density(alpha=.2, fill="#FF6666") 
+  geom_density(alpha=.2, fill="#FF6666") +
+  ggtitle('modelo 2 BTS b1') +
+  theme(plot.title = element_text(hjust = 0.5))
 
 ggplot(MLEBTS_par_g, aes(x=b0)) + 
   geom_histogram(aes(y=..density..), colour="black", fill="white")+
-  geom_density(alpha=.2, fill="#FF6666") 
-
+  geom_density(alpha=.2, fill="#FF6666") +
+  ggtitle('modelo 2 BTS b0') +
+  theme(plot.title = element_text(hjust = 0.5))
 ########### modelo 3
 MLEBTS_par_t = matrix(0, ncol = 3, nrow= 2000)
 MLEBTS_sd_t = matrix(0, ncol = 3, nrow= 2000)
@@ -446,8 +451,66 @@ colnames(MLEBTS_par_t)<-c('b0','b1','r')
 
 ggplot(MLEBTS_par_t, aes(x=b1)) + 
   geom_histogram(aes(y=..density..), colour="black", fill="white")+
-  geom_density(alpha=.2, fill="#FF6666") 
+  geom_density(alpha=.2, fill="#FF6666") +
+ggtitle('modelo 3 BTS b1') +
+  theme(plot.title = element_text(hjust = 0.5))
 
 ggplot(MLEBTS_par_t, aes(x=b0)) + 
   geom_histogram(aes(y=..density..), colour="black", fill="white")+
-  geom_density(alpha=.2, fill="#FF6666") 
+  geom_density(alpha=.2, fill="#FF6666") +
+  ggtitle('modelo 3 BTS b0') +
+  theme(plot.title = element_text(hjust = 0.5))
+###### b
+n<-length(BTSM1$b1)
+rmse1_OLS_b1 = sqrt((n^(-1))* sum((b1- BTSM1$b1)^2))
+rmse1_OLS_b0 = sqrt((n^(-1))*sum((b0- BTSM1$b0)^2))
+rmse1_OLS <-cbind( rmse1_OLS_b1, rmse1_OLS_b0)
+rmse2_OLS_b1 = sqrt((n^(-1))*sum((b1- BTSM2$b1)^2))
+rmse2_OLS_b0 = sqrt((n^(-1))*sum((b0- BTSM2$b0)^2))
+rmse2_OLS <-cbind( rmse2_OLS_b1, rmse2_OLS_b0)
+rmse3_OLS_b1 = sqrt((n^(-1))*sum((b1- BTSM3$b1)^2))
+rmse3_OLS_b0 = sqrt((n^(-1))*sum((b0- BTSM3$b0)^2))
+rmse3_OLS <-cbind( rmse3_OLS_b1, rmse3_OLS_b0)
+rmse_OLS <-rbind( rmse1_OLS, rmse2_OLS, rmse3_OLS)
+rmse_OLS<-as.data.frame(rmse_OLS)
+n<-length(MLEBTS_par_n$b1)
+rmse1_MLE_b1 = sqrt((n^(-1))* sum((b1- MLEBTS_par_n$b1)^2))
+rmse1_MLE_b0 = sqrt((n^(-1))*sum((b0- MLEBTS_par_n$b1)^2))
+rmse1_MLE <-cbind( rmse1_MLE_b1, rmse1_MLE_b0)
+rmse2_MLE_b1 = sqrt((n^(-1))*sum((b1- MLEBTS_par_g$b1)^2))
+rmse2_MLE_b0 = sqrt((n^(-1))*sum((b0- MLEBTS_par_g$b0)^2))
+rmse2_MLE <-cbind( rmse2_MLE_b1, rmse2_MLE_b0)
+rmse3_MLE_b1 = sqrt((n^(-1))*sum((b1- MLEBTS_par_t$b1)^2))
+rmse3_MLE_b0 = sqrt((n^(-1))*sum((b0- MLEBTS_par_t$b0)^2))
+rmse3_MLE <-cbind( rmse3_MLE_b1, rmse3_MLE_b0)
+rmse_MLE <-rbind( rmse1_MLE, rmse2_MLE, rmse3_MLE)
+rmse_MLE<-as.data.frame(rmse_MLE)
+rmse<-cbind(rmse_OLS, rmse_MLE)
+rownames(rmse)<-c('modelo 1', 'modelo 2', 'modelo 3')
+xtable(rmse, type= 'Latex')
+##
+plot(x, y1, col= 'blue', main = 'Modelo 1')
+abline(1.5, 3, col= 'red')
+abline(BTSM1$b0, BTSM1$b1, col= 'green')
+abline(MLEBTS_par_n$b0,MLEBTS_par_n$b1 , col= 'yellow')
+legend(blue=true)
+legend(x='topleft', legend=c("TRUE", "OLS",'MLE'), 
+       fill = c("red","green", 'yellow')
+)
+plot(x, y2, col= 'blue', main = 'Modelo 2')
+abline(1.5, 3, col= 'red')
+abline(BTSM2$b0, BTSM2$b1, col= 'green')
+abline(MLEBTS_par_g$b0,MLEBTS_par_g$b1 , col= 'yellow')
+legend(blue=true)
+legend(x='topleft', legend=c("TRUE", "OLS",'MLE'), 
+       fill = c("red","green", 'yellow')
+)
+
+plot(x, y3, col= 'blue', main = 'Modelo 3')
+abline(1.5, 3, col= 'red')
+abline(BTSM3$b0, BTSM3$b1, col= 'green')
+abline(MLEBTS_par_t$b0,MLEBTS_par_t$b1 , col= 'yellow')
+legend(blue=true)
+legend(x='topleft', legend=c("TRUE", "OLS",'MLE'), 
+       fill = c("red","green", 'yellow')
+)
